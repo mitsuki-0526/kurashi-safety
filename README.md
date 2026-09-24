@@ -8,7 +8,7 @@ Actions の Publish game to GitHub Pages が成功すると、Pages のURLでゲ
 先生画面では授業名・問題コード・公開したゲームURLを設定し、作られた専用QRを配ります。
 生徒は組・番号を入力し、ゲーム内で理由と改善案を書くと自動送信されます。
 先生の一覧・Excelは、別の回収サービス上で認証・保存します。GitHubに回答は保存しません。
-先生の認証は現在ChatGPTです。Google認証は未実装です。
+先生の認証はGoogleです。初回設定完了までは管理画面を利用できません。
 回収先: https://safety-home-connection-check.proud-bow-6894.chatgpt.site/game-teacher
 
 受付と閲覧は作成から24時間です。授業後にExcelを保存し、不要な回答は削除してください。
