@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>くらしの安全探検</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#edf0e6;color:#243b3b;font-family:system-ui,sans-serif}
+    #unity-canvas{display:block;width:100vw;height:100vh;outline:none;background:#e9e5d8}
+    #loading{position:fixed;inset:0;display:grid;place-content:center;gap:18px;text-align:center;padding:32px;background:#f8f5ec}
+    h1{font-size:clamp(24px,4vw,40px);margin:0}p{margin:0;line-height:1.8}progress{width:min(420px,80vw);height:18px;accent-color:#287666}
+    #error{display:none;max-width:640px;text-align:left;white-space:pre-wrap;color:#8b3b27}
+    button{font:inherit;padding:12px 24px;border:0;border-radius:8px;background:#287666;color:white;cursor:pointer}
+    #fullscreen{position:fixed;top:29px;right:30px;font-size:14px;padding:8px 12px;background:#dfe8dc;color:#243b3b}
+    #native-fields{position:fixed;inset:0;pointer-events:none;z-index:2}
+    .native-field-clip{position:absolute;overflow:hidden;pointer-events:auto}
+    .native-field{position:absolute;margin:0;border:2px solid transparent;border-radius:8px;padding:10px;resize:none;background:#fffdf2;color:#243b3b;font:20px/1.5 system-ui,sans-serif;outline:none}
+    .native-field:focus{background:#e4f3e7;border-color:#287666}
+    #screen-help{display:none;position:fixed;inset:0;z-index:3;background:#f8f5ec;padding:28px;text-align:center;place-content:center;gap:20px}
+    @media(max-width:959px),(max-height:599px){#screen-help{display:grid}}
+  </style>
+</head>
+<body>
+  <canvas id="unity-canvas" width="1280" height="720" tabindex="0" aria-label="くらしの安全探検。WASDで移動、矢印キーで見回し、Spaceで指摘します。"></canvas>
+  <button id="fullscreen" type="button" onclick="fullScreen()">全画面</button>
+  <section id="screen-help" aria-label="表示サイズの案内"><h1>画面を広げて始めよう</h1><p>ブラウザの幅を広げるか、全画面にしてください。<br>キーボードで操作する教材です。</p><button type="button" onclick="fullScreen()">全画面で開く</button><p id="screen-note">Escキーで元の大きさに戻せます。</p></section>
+  <div id="loading" role="status">
+    <p>住居学 / くらしを見直す</p><h1>くらしの安全探検</h1>
+    <p id="status">家の準備をしています…</p><progress id="progress" max="1" value="0"></progress>
+    <p id="error"></p><button id="retry" hidden onclick="location.reload()">もう一度読み込む</button>
+    <p>初回は読み込みに時間がかかることがあります。</p>
+  </div>
+  <script src="collection-settings.js"></script>
+  <script src="game-collection.js"></script>
+  <script src="collection.js"></script>
+  <script src="native-fields.js"></script>
+  <script>
+    const loading=document.getElementById('loading'),canvas=document.getElementById('unity-canvas');
+    async function fullScreen(){try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen();canvas.focus();}catch{document.getElementById('screen-note').textContent='ブラウザのウィンドウを広げてお試しください。';}}
+    function fail(message){loading.style.display='grid';document.getElementById('status').textContent='ゲームを読み込めませんでした';document.getElementById('error').style.display='block';document.getElementById('error').textContent='回線や学校の閲覧制限を確認し、先生にこの画面を見せてください。\n\n'+String(message);document.getElementById('retry').hidden=false;}
+    const script=document.createElement('script');script.src='Build/P1.loader.js';
+    script.onerror=()=>fail('ゲーム本体の読み込みに失敗しました。');
+    script.onload=()=>createUnityInstance(canvas,{
+      dataUrl:'Build/P1.data.unityweb',frameworkUrl:'Build/P1.framework.js.unityweb',codeUrl:'Build/P1.wasm.unityweb',
+      streamingAssetsUrl:'StreamingAssets',companyName:'Classroom Materials',productName:'くらしの安全探検',productVersion:'P1',
+      devicePixelRatio:1,
+      showBanner:(message,type)=>{if(type==='error')fail(message);}
+    },value=>{document.getElementById('progress').value=value;}).then(async instance=>{window.SafetyHomeFields.attach(instance);await window.SafetyHomeCollection.attach(instance);loading.style.display='none';canvas.focus();}).catch(fail);
+    document.body.appendChild(script);
+    canvas.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown',' '].includes(e.key))e.preventDefault();});
+  </script>
+</body>
+</html>
