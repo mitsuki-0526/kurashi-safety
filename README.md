@@ -5,13 +5,14 @@ GitHub の Settings → Pages → Source は GitHub Actions にします。
 Actions の Publish game to GitHub Pages が成功すると、Pages のURLでゲームが開きます。
 通常のゲームURLの末尾に teacher.html を付けると先生用の入口です。
 
-先生画面では授業名・問題コード・公開したゲームURLを設定し、作られた専用QRを配ります。
+先生画面でGoogleログインし、授業名と問題コードを設定して、専用QRを配ります。
 生徒は組・番号を入力し、ゲーム内で理由と改善案を書くと自動送信されます。
-先生の一覧・Excelは、別の回収サービス上で認証・保存します。GitHubに回答は保存しません。
-先生の認証はGoogleです。初回設定完了までは管理画面を利用できません。
-回収先: https://safety-home-connection-check.proud-bow-6894.chatgpt.site/game-teacher
+回答はFirebaseに保存し、先生画面で受信・Excel出力します。GitHubに回答は保存しません。
+生徒はGoogleログイン不要です。先生が見られるのは自分で作成した授業の回答です。
+回収先プロジェクト: kurashi-safety-collection（Spark無料プラン）。
 
-受付と閲覧は作成から24時間です。授業後にExcelを保存し、不要な回答は削除してください。
+受付は作成から24時間です。回答は先生が削除するまで残ります。授業後にExcelを保存し、不要な回答は削除してください。
 写真は生徒のメモ画面用で、送信対象に含めていません。
 公開リポジトリに生徒の回答、認証情報、先生の個別トークンを追加しないでください。
-GitHub Pagesの実URLでの学校実機確認は、公開先を決めた後に行います。
+Firebaseの無料枠には上限があります。利用量はFirebaseコンソールで確認してください。
+旧回収サービスのQRは利用できません。更新した先生画面で新しく授業を作成してください。
