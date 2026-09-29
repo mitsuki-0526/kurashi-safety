@@ -1,16 +1,18 @@
 import {connect,teacherLogin,signOut,dbSdk as f} from './firebase-runtime.js';
 import {tableWorkbook} from './excel.js';
+import {createAnswerView} from './firebase-answer-view.js';
 const $=id=>document.getElementById(id);let ctx,user,room,lesson,rows=[],unsubscribe=()=>{};
+const answerView=createAnswerView();
 const fail=e=>{$('error').hidden=false;$('error').textContent='操作できませんでした。 '+(e.message||e);};
 async function run(fn){$('error').hidden=true;try{await fn();}catch(e){fail(e);}}
 function stop(){unsubscribe();unsubscribe=()=>{};}
 window.addEventListener('pagehide',stop);
 function panel(name){for(const n of ['Join','Results','Explanation']){$(n.toLowerCase()+'Panel').hidden=n!==name;$('show'+n).setAttribute('aria-pressed',String(n===name));}}
 async function list(){stop();room=null;$('dashboard').hidden=true;$('setup').hidden=false;const snap=await f.getDocs(f.query(f.collection(ctx.db,'lessons'),f.where('owner','==',user.uid)));$('rooms').replaceChildren();const docs=snap.docs.sort((a,b)=>(b.data().created?.seconds||0)-(a.data().created?.seconds||0));for(const d of docs){const b=document.createElement('button');b.textContent=d.data().lesson+' ／ '+d.data().code+(d.data().closed?'（受付終了）':'');b.onclick=()=>run(()=>open(d.id));$('rooms').append(b);}}
-async function open(id){stop();room=id;rows=[];$('rows').replaceChildren();$('count').textContent='読み込み中…';$('pollState').textContent='';const s=await f.getDoc(f.doc(ctx.db,'lessons',id));if(!s.exists())throw Error('授業が見つかりません。');lesson=s.data();$('setup').hidden=true;$('dashboard').hidden=false;panel('Join');$('title').textContent=lesson.lesson+' ／ '+lesson.code+((lesson.closed||Date.now()>lesson.expires)?'（受付終了）':'');
+async function open(id){stop();room=id;rows=[];answerView.reset();$('count').textContent='読み込み中…';$('pollState').textContent='';const s=await f.getDoc(f.doc(ctx.db,'lessons',id));if(!s.exists())throw Error('授業が見つかりません。');lesson=s.data();$('setup').hidden=true;$('dashboard').hidden=false;panel('Join');$('title').textContent=lesson.lesson+' ／ '+lesson.code+((lesson.closed||Date.now()>lesson.expires)?'（受付終了）':'');
  const link=new URL('./',location.href);link.hash=new URLSearchParams({room:id,collector:'firebase'}).toString();$('joinLink').href=link.href;const qr=window.qrcode(0,'M');qr.addData(link.href);qr.make();const image=document.createElement('img');image.src=qr.createDataURL(5,20);image.alt='授業の参加QR';$('qr').replaceChildren(image);$('close').disabled=lesson.closed||Date.now()>lesson.expires;
  unsubscribe=f.onSnapshot(f.collection(ctx.db,'lessons',id,'answers'),snap=>{if(room!==id)return;rows=[];let invalid=0;for(const d of snap.docs){try{const notes=JSON.parse(d.data().payload);if(!Array.isArray(notes)||notes.length>200)throw Error();for(const n of notes){if(!n||typeof n!=='object'||!['classroom','number','label','place','reason','improvement','code'].every(k=>typeof n[k]==='string')||typeof n.deleted!=='boolean')throw Error();rows.push({...n,uid:d.id,updated:d.data().updated?.toDate()});}}catch{invalid++;}}
- rows.sort((a,b)=>a.classroom.localeCompare(b.classroom,'ja')||Number(a.number)-Number(b.number));$('rows').replaceChildren();for(const n of rows.filter(n=>!n.deleted)){const tr=document.createElement('tr');for(const value of [n.classroom+' '+n.number+'番',n.label+' ／ '+n.place,n.reason,n.improvement]){const td=document.createElement('td');td.textContent=value.slice(0,1200);tr.append(td);}$('rows').append(tr);}$('count').textContent=snap.size+'端末 ／ '+rows.filter(n=>!n.deleted).length+'件の指摘';$('empty').hidden=rows.some(n=>!n.deleted);$('pollState').textContent='最終受信 '+new Date().toLocaleTimeString('ja-JP')+(invalid?'（読み取れない回答 '+invalid+'件）':'');},fail);
+ rows.sort((a,b)=>a.classroom.localeCompare(b.classroom,'ja')||Number(a.number)-Number(b.number));answerView.update(rows,snap.size);$('pollState').textContent='最終受信 '+new Date().toLocaleTimeString('ja-JP')+(invalid?'（読み取れない回答 '+invalid+'件）':'');},fail);
 }
 $('login').onclick=()=>run(async()=>{
  $('login').disabled=true;$('login').textContent='ログインしています…';
